@@ -1,0 +1,20 @@
+--- Act1/kern/pmap.h	2024-10-20 19:17:46.000000000 -0400
++++ Act2/kern/pmap.h	2024-12-05 13:10:15.000000000 -0500
+@@ -8,6 +8,7 @@
+ 
+ #include <inc/memlayout.h>
+ #include <inc/assert.h>
++struct Env;
+ 
+ extern char bootstacktop[], bootstack[];
+ 
+@@ -62,6 +63,9 @@
+ 
+ void	tlb_invalidate(pde_t *pgdir, void *va);
+ 
++int		user_mem_check(struct Env *env, const void *va, size_t len, int perm);
++void	user_mem_assert(struct Env *env, const void *va, size_t len, int perm);
++
+ static inline physaddr_t
+ page2pa(struct PageInfo *pp)
+ {

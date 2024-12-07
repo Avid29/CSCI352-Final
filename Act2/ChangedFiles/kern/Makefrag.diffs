@@ -1,0 +1,23 @@
+--- Act1/kern/Makefrag	2024-10-20 19:16:43.000000000 -0400
++++ Act2/kern/Makefrag	2024-12-05 12:51:13.000000000 -0500
+@@ -36,7 +36,19 @@
+ KERN_SRCFILES := $(wildcard $(KERN_SRCFILES))
+ 
+ # Binary program images to embed within the kernel.
+-KERN_BINFILES := 
++KERN_BINFILES :=	user/hello \
++			user/buggyhello \
++			user/buggyhello2 \
++			user/evilhello \
++			user/testbss \
++			user/divzero \
++			user/breakpoint \
++			user/softint \
++			user/badsegment \
++			user/faultread \
++			user/faultreadkernel \
++			user/faultwrite \
++			user/faultwritekernel
+ 
+ KERN_OBJFILES := $(patsubst %.c, $(OBJDIR)/%.o, $(KERN_SRCFILES))
+ KERN_OBJFILES := $(patsubst %.S, $(OBJDIR)/%.o, $(KERN_OBJFILES))

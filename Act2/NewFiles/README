@@ -1,0 +1,13 @@
+These directories contain files that are to be added to the corresponding
+directories in the project hierarchy. You should be able to just copy or
+move them from here into the correct places:
+
+   cp inc/* ../../inc
+   cp kern/* ../../kern
+   cp lib/* ../../lib
+   cp user/* ../../user
+
+You can, if you prefer, use the COPY script found here, which will
+iterate through the files to be updated and check to be sure they don't
+already exist before copying them, to avoid accidentally overwriting
+them.

@@ -1,0 +1,44 @@
+#!/bin/bash
+#
+# Add the new Activity 2 files to the project hierarchy.
+#
+# Assumes we're in projectdir/Act2/NewFiles.
+#
+
+# verify that we're where we expect to be by looking for the
+# Makefile in the top-level project directory
+
+if [ ! -f ../../Makefile ]
+then
+	echo "I'm confused - I should be run from the Act2/Newfiles"
+	echo "directory, but I cannot find the Makefile in my"
+	echo "grandparent directory. I'm outta here!"
+	exit 1
+fi
+
+# OK, we are where we think we are. Iterate through the list of 
+# files to be updated.
+
+files="inc/env.h inc/lib.h inc/syscall.h inc/trap.h kern/env.c \
+	kern/env.h kern/syscall.c kern/syscall.h kern/trap.c \
+	kern/trap.h kern/trapentry.S lib/Makefrag lib/console.c \
+	lib/entry.S lib/exit.c lib/libmain.c lib/panic.c \
+	lib/printf.c lib/syscall.c user/Makefrag user/badsegment.c \
+	user/breakpoint.c user/buggyhello.c user/buggyhello2.c \
+	user/divzero.c user/evilhello.c user/faultread.c \
+	user/faultreadkernel.c user/faultwrite.c \
+	user/faultwritekernel.c user/hello.c \
+	user/softint.c user/testbss.c user/user.ld"
+
+for f in $files
+do
+	# see if the file already exists
+	if [ -f ../../$f ]
+	then
+		echo ../../$f already exists - skipping it
+		continue
+	fi
+
+	echo Copying $f to ../../$f
+	cp $f ../../$f
+done

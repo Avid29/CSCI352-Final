@@ -1,0 +1,10 @@
+--- Act1/kern/entry.S	2024-12-04 13:46:43.000000000 -0500
++++ Act2/kern/entry.S	2024-12-05 12:52:09.000000000 -0500
+@@ -2,6 +2,7 @@
+ 
+ #include <inc/mmu.h>
+ #include <inc/memlayout.h>
++#include <inc/trap.h>
+ 
+ # Shift Right Logical 
+ #define SRL(val, shamt)		(((val) >> (shamt)) & ~(-1 << (32 - (shamt))))

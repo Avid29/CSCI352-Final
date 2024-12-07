@@ -1,0 +1,126 @@
+This directory contains files that already exist in Activity 1, but need
+to have things added to them for Activity 2. Integrating them will
+require editing in some cases.
+
+If you have not modified the file for Activity 1, you can simply copy
+the updated version over the old version.
+
+If you HAVE modified the file for Activity 1, you will need to
+either integrate the changes into the old version of the file, or
+copy over your changes from the old version into this version and
+then replace the old version with your (updated) new version.
+Alternatively, you can use the utility program 'patch' to apply the
+differences.
+
+ - - - - -
+
+1) Editing the file by hand
+
+Each file exists in two forms:
+
+   name		the new version of the file
+
+   name.diffs	"unified" diff listings comparing the old version of
+   		the file to the new version.
+
+Unified diffs are more compact than traditional diffs because they show
+only lines to be deleted from or added to the first file in order to make
+it match the second file. For example, here are the differences for the
+kern/init.c file:
+
+  --- Act1/kern/init.c	2024-12-04 13:22:12.000000000 -0500
+  +++ Act2/kern/init.c	2024-12-05 12:55:12.000000000 -0500
+  @@ -8,6 +8,8 @@
+   #include <kern/console.h>
+   #include <kern/pmap.h>
+   #include <kern/kclock.h>
+  +#include <kern/env.h>
+  +#include <kern/trap.h>
+   
+   
+   void
+  @@ -29,9 +31,20 @@
+   	// memory management initialization functions
+   	mem_init();
+   
+  -	// Drop into the kernel monitor.
+  -	while (1)
+  -		monitor(NULL);
+  +	// Activity 2 user environment initialization
+  +	env_init();
+  +	trap_init();
+  +
+  +#if defined(TEST)
+  +	// Don't touch - this is used for testing!
+  +	ENV_CREATE(TEST, ENV_TYPE_USER);
+  +#else
+  +	// This can be modified as you wish
+  +	ENV_CREATE(user_hello, ENV_TYPE_USER);
+  +#endif // TEST
+  +
+  +	// We only have one user environment for now, so just run it.
+  +	env_run( &envs[0] );
+   }
+ 
+This shows the changes need to convert the Activity 1 version of the file
+into the Activity 2 version:
+
+   * After line 10, add two #include statements
+
+   * At line 32, delete the three lines
+   
+   	// Drop into the kernel monitor.
+   	while (1)
+   		monitor(NULL);
+
+     and replace them with the 14 lines
+
+   	// Activity 2 user environment initialization
+   	env_init();
+   	trap_init();
+   
+   #if defined(TEST)
+   	// Don't touch - this is used for testing!
+   	ENV_CREATE(TEST, ENV_TYPE_USER);
+   #else
+   	// This can be modified as you wish
+   	ENV_CREATE(user_hello, ENV_TYPE_USER);
+   #endif // TEST
+   
+   	// We only have one user environment for now, so just run it.
+   	env_run( &envs[0] );
+
+The 'vim' editor understands the syntax of unified diff files, so if you
+have syntax highlighting and coloring enabled, you can look at a diff
+file and you'll see the "to be deleted" lines in one color and the "to
+be added" lines in a different color.
+
+ - - - - -
+
+2) Using the 'patch' utility program
+
+If you are familiar with the utility program 'patch', you can use it to
+apply the difference files, as it understands unified diffs. Copy the
+*.diffs files into the directories with the files you want to update, and
+then run these commands:
+
+   In the top-level directory:
+      patch -b -p1 < Makefile.diffs
+
+   In the 'kern' directory:
+      patch -b -p2 < Makefrag.diffs
+      patch -b -p2 < entry.S.diffs
+      patch -b -p2 < init.c.diffs
+      patch -b -p2 < kdebug.c.diffs
+      patch -b -p2 < monitor.c.diffs
+      patch -b -p2 < pmap.c.diffs
+      patch -b -p2 < pmap.h.diffs
+
+The -b option says "create a backup copy" which will be left in a file
+whose name is the original file name with a ".orig" suffix added.
+
+NOTE: 'patch' does a pretty good job of figuring out how to apply changes
+to a file that doesn't exactly match the original version used to create
+the difference listing, but it's not perfect. If it gets confused, it
+will ask you how to apply the patch, or will just say it is rejecting the
+patch, which means you may have to apply it manually.

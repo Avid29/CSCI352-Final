@@ -1,0 +1,38 @@
+--- Act1/Makefile	2024-12-05 13:46:14.625398000 -0500
++++ Act2/Makefile	2024-12-05 12:49:02.000000000 -0500
+@@ -99,6 +99,8 @@
+ # Include Makefrags for subdirectories
+ include boot/Makefrag
+ include kern/Makefrag
++include lib/Makefrag
++include user/Makefrag
+ 
+ 
+ QEMUOPTS = -drive file=$(OBJDIR)/kern/kernel.img,index=0,media=disk,format=raw -serial mon:stdio -gdb tcp::$(GDBPORT)
+@@ -150,6 +152,26 @@
+ distclean: realclean
+ 	rm -rf conf/gcc.mk
+ 
++# These targets allow you to "test-run" your system with a specific
++# user program in Activity 2. They operate like the various "qemu-*"
++# targets: e.g., "make run-hello" will use QEMU to run the 'hello'
++# user program under your operating system.
++
++prep-%:
++	$(V)$(MAKE) "INIT_CFLAGS=${INIT_CFLAGS} -DTEST=`case $* in *_*) echo $*;; *) echo user_$*;; esac`" $(IMAGES)
++
++run-%-nox-gdb: prep-% pre-qemu
++	$(QEMU) -nographic $(QEMUOPTS) -S
++
++run-%-gdb: prep-% pre-qemu
++	$(QEMU) $(QEMUOPTS) -S
++
++run-%-nox: prep-% pre-qemu
++	$(QEMU) -nographic $(QEMUOPTS)
++
++run-%: prep-% pre-qemu
++	$(QEMU) $(QEMUOPTS)
++
+ # This magic automatically generates makefile dependencies
+ # for header files included from C source files we compile,
+ # and keeps those dependencies up-to-date every time we recompile.
