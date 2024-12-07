@@ -1,0 +1,25 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Boot QEMU",
+            "type": "shell",
+            "command": "make",
+            "args": ["qemu-gdb"],
+            "isBackground": true,
+            "problemMatcher": {
+                "pattern":{
+                    "regexp": ".",
+                    "file": 1,
+                    "location": 2,
+                    "message": 3
+                },
+                "background": {
+                    "activeOnStart": true,
+                    "beginsPattern": ".",
+                    "endsPattern": "."
+                }
+            }
+        }
+    ]
+}
