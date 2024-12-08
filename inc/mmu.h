@@ -46,7 +46,11 @@
 #define NPTENTRIES	1024		// page table entries per page table
 
 #define PGSIZE		4096		// bytes mapped by a page
-#define PGSHIFT		12		// log2(PGSIZE)
+#define PGSHIFT		12			// log2(PGSIZE)
+
+// This rounding method assumes PGSIZE is a power of 2 and is slightly faster.
+#define PGROUNDUP(ad) (((ad)+PGSIZE-1) & ~(PGSIZE-1))
+#define PGROUNDDOWN(ad) ((ad) & ~(PGSIZE-1))
 
 #define PTSIZE		(PGSIZE*NPTENTRIES) // bytes mapped by a page directory entry
 #define PTSHIFT		22		// log2(PTSIZE)

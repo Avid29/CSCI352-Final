@@ -99,14 +99,11 @@ boot_alloc(uint32_t n)
 
 	// We will always end up returning the initial value of nextfree.
 	result = nextfree;
-
+	
 	// Allocate a chunk large enough to hold 'n' bytes, then update
 	// nextfree.  Make sure nextfree is kept aligned
 	// to a multiple of PGSIZE.
-	if (n > 0) {
-		// NOTE: This assumes PGSIZE is a power of 2.
-		nextfree = (char*)(((uint32_t)nextfree + n + PGSIZE - 1) & ~(PGSIZE - 1));
-	}
+	nextfree = (char *)PGROUNDUP((uint32_t)(nextfree + n));
 
 	// Check for an overflow. If one occurred we ran out of memory.
 	// There should be 1024 pages here, and they should go to the end of memory.
@@ -374,9 +371,32 @@ page_decref(struct PageInfo* pp)
 pte_t *
 pgdir_walk(pde_t *pgdir, const void *va, int create)
 {
+	if (!pgdir)
+		panic("pgdir_walk expects a non-null page directory arg");
+
+	pde_t pde = pgdir[PDX(va)];
+
+	// If the page table entry is not initialized and create is true, initialize the table.
+	// If create is false, return null.
+	if (!(pde & PTE_P)) {
+		if (!create)
+			return NULL;
+
+		// Allocate new table
+		struct PageInfo *pp = page_alloc(ALLOC_ZERO);
+		if(!pp)
+			return NULL;
+		pp->pp_ref++;
+
+		physaddr_t ppa = page2pa(pp);
+		if (ppa & 0xfff)
+			panic("Attempted to allocate unaligned page");
+
+		pgdir[PDX(va)] = ppa | PTE_P | PTE_W;
+		return page2kva(pp);
+	}
 	
-	// +++ Activity 1: YOUR CODE HERE
-	return NULL;
+	return KADDR(PTE_ADDR(pde));
 }
 
 //
@@ -424,7 +444,24 @@ boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm
 int
 page_insert(pde_t *pgdir, struct PageInfo *pp, void *va, int perm)
 {
-	// +++ Activity 1: YOUR CODE HERE
+	// Find the page table entry
+	pte_t *ptbl = pgdir_walk(pgdir, va, 1);
+	if (!ptbl)
+		return -E_NO_MEM;
+
+	pp->pp_ref++;
+	pte_t *pte = &ptbl[PTX(va)];
+
+	// Remove the page entry if already mapped
+	if (*pte & PTE_P)
+		page_remove(pgdir, va);
+
+	// Map the virtual page to the physical page 
+	physaddr_t pa = page2pa(pp);
+	*pte = pa|perm|PTE_P;
+
+	// Invalidate cache
+	tlb_invalidate(pgdir, va);
 	return 0;
 }
 
@@ -442,8 +479,12 @@ page_insert(pde_t *pgdir, struct PageInfo *pp, void *va, int perm)
 struct PageInfo *
 page_lookup(pde_t *pgdir, void *va, pte_t **pte_store)
 {
-	// +++ Activity 1: YOUR CODE HERE
-	return NULL;
+	pte_t *ptbl = pgdir_walk(pgdir, va, 0);
+	if (!ptbl)
+		return NULL;
+
+	physaddr_t pa = PTE_ADDR(ptbl[PTX(va)]);
+	return pa2page(pa);
 }
 
 //
@@ -464,7 +505,16 @@ page_lookup(pde_t *pgdir, void *va, pte_t **pte_store)
 void
 page_remove(pde_t *pgdir, void *va)
 {
-	// +++ Activity 1: YOUR CODE HERE
+	// Decrement the page refs (the physical page will automatically be free if it hits 0).
+	struct PageInfo *pp = page_lookup(pgdir, va, 0);
+	page_decref(pp);
+
+	// Remove from the table
+	pte_t *ptbl = pgdir_walk(pgdir, va, 0);
+	ptbl[PTX(va)] = 0;
+
+	// Invalidate the cache
+	tlb_invalidate(pgdir, va);
 }
 
 //
