@@ -97,13 +97,26 @@ boot_alloc(uint32_t n)
 		nextfree = ROUNDUP((char *) end, PGSIZE);
 	}
 
+	// We will always end up returning the initial value of nextfree.
+	result = nextfree;
+
 	// Allocate a chunk large enough to hold 'n' bytes, then update
 	// nextfree.  Make sure nextfree is kept aligned
 	// to a multiple of PGSIZE.
+	if (n > 0) {
+		// NOTE: This assumes PGSIZE is a power of 2.
+		nextfree = (char*)(((uint32_t)nextfree + n + PGSIZE - 1) & ~(PGSIZE - 1));
+	}
 
-	// +++ Activity 1: YOUR CODE HERE
-
-	return NULL;
+	// Check for an overflow. If one occurred we ran out of memory.
+	// There should be 1024 pages here, and they should go to the end of memory.
+	// So if the addition operation overflows then we ran out of memory. No?
+	if (nextfree < result){
+		panic("boot_alloc: Out of memory\n");
+	}
+	
+	//cprintf("Allocated from: %p.\nNext Page: %p\n", result, nextfree);
+	return result;
 }
 
 // Set up a two-level page table:
@@ -123,9 +136,6 @@ mem_init(void)
 
 	// Find out how much memory the machine has (npages & npages_basemem).
 	i386_detect_memory();
-
-	// Remove this line when you're ready to test this function.
-	panic("mem_init: This function is not finished\n");
 
 	//////////////////////////////////////////////////////////////////////
 	// create initial page directory.
@@ -148,8 +158,9 @@ mem_init(void)
 	// array.  'npages' is the number of physical pages in memory.  Use memset
 	// to initialize all fields of each struct PageInfo to 0.
 
-	// +++ Activity 1: YOUR CODE HERE
-
+	size_t pagesinfo_size = npages*sizeof(struct PageInfo);
+	pages = boot_alloc(pagesinfo_size);
+	memset(pages, 0, pagesinfo_size);
 
 	//////////////////////////////////////////////////////////////////////
 	// Now that we've allocated the initial kernel data structures, we set
@@ -223,6 +234,18 @@ mem_init(void)
 	check_page_installed_pgdir();
 }
 
+void link_pages(struct PageInfo *start, struct PageInfo *end){
+	struct PageInfo *i = start;
+	while (i < end)
+	{
+		i->pp_ref = 0;
+		i->pp_link = page_free_list;
+
+		page_free_list = i;
+		i++;
+	}
+}
+
 // --------------------------------------------------------------
 // Tracking of physical pages.
 // The 'pages' array has one 'struct PageInfo' entry per physical page.
@@ -256,14 +279,13 @@ page_init(void)
 	// NB: DO NOT actually touch the physical memory corresponding to
 	// free pages!
 
-	// +++ Activity 1: YOUR CODE HERE
-	size_t i;
-	for (i = 0; i < npages; i++) {
-		pages[i].pp_ref = 0;
-		pages[i].pp_link = page_free_list;
-		page_free_list = &pages[i];
-	}
+	// Link pages in basemem, skipping 0 in order to maintain page 0 1:1 physical/virtual mapping. 
+	link_pages(pages + 1, pages + npages_basemem);
+	
+	// Link extended memory until UTEXT section
+	link_pages(pages + USTABDATA/PGSIZE, pages + (size_t)PFTEMP/PGSIZE);
 }
+
 
 //
 // Allocates a physical page.  If (alloc_flags & ALLOC_ZERO), fills the entire
@@ -280,8 +302,22 @@ page_init(void)
 struct PageInfo *
 page_alloc(int alloc_flags)
 {
-	// +++ Activity 1: YOUR CODE HERE
-	return 0;
+	// No available memory
+	if (!page_free_list)
+		return NULL;
+
+	// Pop a page from the free list
+	struct PageInfo *page = page_free_list;
+	page_free_list = page->pp_link;
+	page->pp_link = NULL;
+
+	// Clear page if clear flag is set 
+	if (alloc_flags & ALLOC_ZERO){
+		void *addr = page2kva(page);
+		memset(addr, 0, PGSIZE);
+	}
+
+	return page;
 }
 
 //
@@ -291,9 +327,15 @@ page_alloc(int alloc_flags)
 void
 page_free(struct PageInfo *pp)
 {
-	// +++ Activity 1: YOUR CODE HERE
-	// Hint: You may want to panic if pp->pp_ref is nonzero or
-	// pp->pp_link is not NULL.
+	if (pp->pp_link)
+		panic("Attempted to free page that is already on free list.");
+
+	if (pp->pp_ref)
+		panic("Attempted to free page that is still referenced.");
+
+	// Push page to free list
+	pp->pp_link = page_free_list;
+	page_free_list = pp;
 }
 
 //
@@ -332,6 +374,7 @@ page_decref(struct PageInfo* pp)
 pte_t *
 pgdir_walk(pde_t *pgdir, const void *va, int create)
 {
+	
 	// +++ Activity 1: YOUR CODE HERE
 	return NULL;
 }
