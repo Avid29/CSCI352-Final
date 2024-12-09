@@ -392,11 +392,12 @@ pgdir_walk(pde_t *pgdir, const void *va, int create)
 		if (ppa & 0xfff)
 			panic("Attempted to allocate unaligned page");
 
-		pgdir[PDX(va)] = ppa | PTE_P | PTE_W;
+		pgdir[PDX(va)] = ppa|PTE_P|PTE_W;
 		return page2kva(pp);
 	}
-	
-	return KADDR(PTE_ADDR(pde));
+
+	pte_t *ptbl = KADDR(PTE_ADDR(pde));
+	return ptbl + PTX(va);
 }
 
 //
@@ -413,7 +414,12 @@ pgdir_walk(pde_t *pgdir, const void *va, int create)
 static void
 boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm)
 {
-	// +++ Activity 1: YOUR CODE HERE
+	// Maybe not the most efficient method, but this is the easiest way to allow
+	// the pages to span multiple directories.
+	for (size_t o = 0; o < size; o += PGSIZE) {
+		pte_t *pte = pgdir_walk(pgdir, (void *)va + o, 1);
+		*pte = perm|PTE_P;
+	}
 }
 
 //
@@ -445,12 +451,10 @@ int
 page_insert(pde_t *pgdir, struct PageInfo *pp, void *va, int perm)
 {
 	// Find the page table entry
-	pte_t *ptbl = pgdir_walk(pgdir, va, 1);
-	if (!ptbl)
+	pte_t *pte = pgdir_walk(pgdir, va, 1);
+	if (!pte)
 		return -E_NO_MEM;
-
 	pp->pp_ref++;
-	pte_t *pte = &ptbl[PTX(va)];
 
 	// Remove the page entry if already mapped
 	if (*pte & PTE_P)
@@ -479,11 +483,11 @@ page_insert(pde_t *pgdir, struct PageInfo *pp, void *va, int perm)
 struct PageInfo *
 page_lookup(pde_t *pgdir, void *va, pte_t **pte_store)
 {
-	pte_t *ptbl = pgdir_walk(pgdir, va, 0);
-	if (!ptbl)
+	pte_t *pte = pgdir_walk(pgdir, va, 0);
+	if (!pte)
 		return NULL;
 
-	physaddr_t pa = PTE_ADDR(ptbl[PTX(va)]);
+	physaddr_t pa = PTE_ADDR(*pte);
 	return pa2page(pa);
 }
 
@@ -510,8 +514,8 @@ page_remove(pde_t *pgdir, void *va)
 	page_decref(pp);
 
 	// Remove from the table
-	pte_t *ptbl = pgdir_walk(pgdir, va, 0);
-	ptbl[PTX(va)] = 0;
+	pte_t *pte = pgdir_walk(pgdir, va, 0);
+	*pte = 0;
 
 	// Invalidate the cache
 	tlb_invalidate(pgdir, va);
