@@ -374,11 +374,11 @@ pgdir_walk(pde_t *pgdir, const void *va, int create)
 	if (!pgdir)
 		panic("pgdir_walk expects a non-null page directory arg");
 
-	pde_t pde = pgdir[PDX(va)];
+	pde_t *pde = &pgdir[PDX(va)];
 
 	// If the page table entry is not initialized and create is true, initialize the table.
 	// If create is false, return null.
-	if (!(pde & PTE_P)) {
+	if (!(*pde & PTE_P)) {
 		if (!create)
 			return NULL;
 
@@ -392,11 +392,10 @@ pgdir_walk(pde_t *pgdir, const void *va, int create)
 		if (ppa & 0xfff)
 			panic("Attempted to allocate unaligned page");
 
-		pgdir[PDX(va)] = ppa|PTE_P|PTE_W;
-		return page2kva(pp);
+		*pde = ppa|PTE_P|PTE_W|PTE_U;
 	}
 
-	pte_t *ptbl = KADDR(PTE_ADDR(pde));
+	pte_t *ptbl = KADDR(PTE_ADDR(*pde));
 	return ptbl + PTX(va);
 }
 
