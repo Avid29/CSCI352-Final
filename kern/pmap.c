@@ -180,8 +180,7 @@ mem_init(void)
 	//    - the new image at UPAGES -- kernel R, user R
 	//      (ie. perm = PTE_U | PTE_P)
 	//    - pages itself -- kernel RW, user NONE
-
-	// +++ Activity 1: YOUR CODE HERE
+	boot_map_region(kern_pgdir, UPAGES, pagesinfo_size, PADDR(pages), PTE_U);
 
 	//////////////////////////////////////////////////////////////////////
 	// Use the physical memory that 'bootstack' refers to as the kernel
@@ -193,8 +192,7 @@ mem_init(void)
 	//       the kernel overflows its stack, it will fault rather than
 	//       overwrite memory.  Known as a "guard page".
 	//     Permissions: kernel RW, user NONE
-
-	// +++ Activity 1: YOUR CODE HERE
+	boot_map_region(kern_pgdir, KSTACKTOP-KSTKSIZE, KSTKSIZE, PADDR(bootstack), PTE_W);
 
 	//////////////////////////////////////////////////////////////////////
 	// Map all of physical memory at KERNBASE.
@@ -203,8 +201,7 @@ mem_init(void)
 	// We might not have 2^32 - KERNBASE bytes of physical memory, but
 	// we just set up the mapping anyway.
 	// Permissions: kernel RW, user NONE
-
-	// +++ Activity 1: YOUR CODE HERE
+	boot_map_region(kern_pgdir, KERNBASE, KERNBASESIZE, 0, PTE_W);
 
 	// Check that the initial page directory has been set up correctly.
 	check_kern_pgdir();
@@ -413,11 +410,15 @@ pgdir_walk(pde_t *pgdir, const void *va, int create)
 static void
 boot_map_region(pde_t *pgdir, uintptr_t va, size_t size, physaddr_t pa, int perm)
 {
+	// This really shouldn't have any effect, but it's nice to be safe
+	va = PGROUNDDOWN(va);
+	size = PGROUNDUP(size);
+
 	// Maybe not the most efficient method, but this is the easiest way to allow
 	// the pages to span multiple directories.
 	for (size_t o = 0; o < size; o += PGSIZE) {
 		pte_t *pte = pgdir_walk(pgdir, (void *)va + o, 1);
-		*pte = perm|PTE_P;
+		*pte = (pa + o)|perm|PTE_P;
 	}
 }
 
