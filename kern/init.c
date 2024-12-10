@@ -8,7 +8,8 @@
 #include <kern/console.h>
 #include <kern/pmap.h>
 #include <kern/kclock.h>
-
+#include <kern/env.h>
+#include <kern/trap.h>
 
 void
 i386_init(void)
