@@ -248,14 +248,10 @@ mem_init(void)
 }
 
 void link_pages(struct PageInfo *start, struct PageInfo *end){
-	struct PageInfo *i = start;
-	while (i < end)
-	{
+	for (struct PageInfo *i = start; i < end; i++){
 		i->pp_ref = 0;
 		i->pp_link = page_free_list;
-
 		page_free_list = i;
-		i++;
 	}
 }
 
