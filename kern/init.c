@@ -30,6 +30,9 @@ i386_init(void)
 	// memory management initialization functions
 	mem_init();
 
+	// environment initialization functions
+	env_init();
+
 	// Drop into the kernel monitor.
 	while (1)
 		monitor(NULL);

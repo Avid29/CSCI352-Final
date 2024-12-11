@@ -114,8 +114,14 @@ envid2env(envid_t envid, struct Env **env_store, bool checkperm)
 void
 env_init(void)
 {
-	// Set up envs array
-	// LAB 3: Your code here.
+	// NOTE: If I hated all that were good and pure, I could change the layout of Env to
+	// put the link first and the env_id second. Then add an object size arg andreuse the link_pages function.
+
+	for (struct Env *i = &envs[NENV]; i >= envs; i--){
+		i->env_id = 0;
+		i->env_link = env_free_list;
+		env_free_list = i;
+	}
 
 	// Per-CPU part of the initialization
 	env_init_percpu();
@@ -155,15 +161,12 @@ env_init_percpu(void)
 static int
 env_setup_vm(struct Env *e)
 {
-	int i;
-	struct PageInfo *p = NULL;
-
-	// Allocate a page for the page directory
-	if (!(p = page_alloc(ALLOC_ZERO)))
+	// Initialize a new page directory.
+	// It's up to user_init_pgdir() how deep or shallow the clone needs to be.
+	if (!(e->env_pgdir = user_init_pgdir()))
 		return -E_NO_MEM;
 
-	// Now, set e->env_pgdir and initialize the page directory.
-	//
+
 	// Hint:
 	//    - The VA space of all envs is identical above UTOP
 	//	(except at UVPT, which we've set below).
@@ -177,6 +180,7 @@ env_setup_vm(struct Env *e)
 	//	is an exception -- you need to increment env_pgdir's
 	//	pp_ref for env_free to work correctly.
 	//    - The functions in kern/pmap.h are handy.
+
 
 	// LAB 3: Your code here.
 
@@ -340,7 +344,16 @@ load_icode(struct Env *e, uint8_t *binary)
 void
 env_create(uint8_t *binary, enum EnvType type)
 {
-	// LAB 3: Your code here.
+	struct Env *e;
+	switch (env_alloc(&e, 0))
+	{
+		case -E_NO_FREE_ENV:
+			panic("No free environments for first user-mode environment.");
+			break;
+		case -E_NO_MEM:
+			panic("Out of memory while creating first user-mode environment.");
+			break;
+	}
 }
 
 //

@@ -156,18 +156,19 @@ mem_init(void)
 	// array.  'npages' is the number of physical pages in memory.  Use memset
 	// to initialize all fields of each struct PageInfo to 0.
 
-	size_t pagesinfo_size = npages*sizeof(struct PageInfo);
-	pages = boot_alloc(pagesinfo_size);
-	memset(pages, 0, pagesinfo_size);
+	pages = boot_alloc(PAGEINFO_SIZE);
+	memset(pages, 0, PAGEINFO_SIZE);
 
 
 
 	//////////////////////////////////////////////////////////////////////
 	// Make 'envs' point to an array of size 'NENV' of 'struct Env'.
 
-	size_t envs_size = NENV*sizeof(struct Env);
-	envs = boot_alloc(envs_size);
-	memset(envs, 0, envs_size);
+	envs = boot_alloc(ENVSINFO_SIZE);
+
+	// Note: Could memset for that warm sense of defined behavior,
+	// but the list will be initialized later anyway
+	// memset(envs, 0, ENVSINFO_SIZE);
 
 	//////////////////////////////////////////////////////////////////////
 	// Now that we've allocated the initial kernel data structures, we set
@@ -190,7 +191,7 @@ mem_init(void)
 	//    - the new image at UPAGES -- kernel R, user R
 	//      (ie. perm = PTE_U | PTE_P)
 	//    - pages itself -- kernel RW, user NONE
-	boot_map_region(kern_pgdir, UPAGES, pagesinfo_size, PADDR(pages), PTE_U);
+	boot_map_region(kern_pgdir, UPAGES, PAGEINFO_SIZE, PADDR(pages), PTE_U);
 
 	//////////////////////////////////////////////////////////////////////
 	// Map the 'envs' array read-only by the user at linear address UENVS
@@ -199,7 +200,7 @@ mem_init(void)
 	//    - the new image at UENVS  -- kernel R, user R
 	//    - envs itself -- kernel RW, user NONE
 
-	boot_map_region(kern_pgdir, UENVS, envs_size, PADDR(envs), PTE_U);
+	boot_map_region(kern_pgdir, UENVS, ENVSINFO_SIZE, PADDR(envs), PTE_U);
 
 	//////////////////////////////////////////////////////////////////////
 	// Use the physical memory that 'bootstack' refers to as the kernel
@@ -294,7 +295,6 @@ page_init(void)
 	// Link extended memory until UTEXT section
 	link_pages(pages + USTABDATA/PGSIZE, pages + (size_t)PFTEMP/PGSIZE);
 }
-
 
 //
 // Allocates a physical page.  If (alloc_flags & ALLOC_ZERO), fills the entire
@@ -546,6 +546,51 @@ tlb_invalidate(pde_t *pgdir, void *va)
 	// Flush the entry only if we're modifying the current address space.
 	// For now, there is only one address space, so always invalidate.
 	invlpg(va);
+}
+
+// 
+// Clones a range of directory and table entries from kern_pgdir, avoiding
+// creating new tables when possible.
+// 
+// Currently, an assumption is made that only the directory entries need
+// to be duplicated.
+// 
+int
+clone_range(pde_t* pgdir, uintptr_t start, size_t size){
+	for (size_t i = 0; i < size; i += size/(PGSIZE*PGSIZE)){
+		pgdir[PDX(start + i)] = kern_pgdir[PDX(start + i)];
+	}
+	return 0;
+}
+
+//
+// Duplicates the kern_pgdir for a user environment,
+// taking only the directory and table entries with user
+// permission levels.
+//
+// Note: Considering a change to pgdir_walk which adds an argument to ensure
+// permission levels. With this change, this function could be possibly
+// be changed to use iteration instead of taking a pre-determined range. 
+// 
+pde_t *
+user_init_pgdir(void) {
+	struct PageInfo *p = NULL;
+	
+	// Allocate a page for the page directory
+	if (!(p = page_alloc(ALLOC_ZERO)))
+		return NULL;
+	p->pp_ref++;
+	pde_t *pgdir = page2kva(p);
+
+	// Clone ranges of memory
+	if (!clone_range(pgdir, UPAGES, PAGEINFO_SIZE))
+		goto free_and_fail;
+	if (!clone_range(pgdir, UENVS, ENVSINFO_SIZE))
+		goto free_and_fail;
+
+	free_and_fail:
+	page_free(p);
+	return NULL;
 }
 
 static uintptr_t user_mem_check_addr;
