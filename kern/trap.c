@@ -64,7 +64,27 @@ trap_init(void)
 {
 	extern struct Segdesc gdt[];
 
-	// LAB 3: Your code here.
+	SETGATE(idt[ 0], 1, STA_X, T_div_err,				0);
+	SETGATE(idt[ 1], 1, STA_X, T_debug,					0);
+	SETGATE(idt[ 2], 1, STA_X, T_nmskint, 				0);
+	SETGATE(idt[ 3], 1, STA_X, T_brkpnt,				0);
+	SETGATE(idt[ 4], 1, STA_X, T_overflow,				0);
+	SETGATE(idt[ 5], 1, STA_X, T_bound_range_exc,		0);
+	SETGATE(idt[ 6], 1, STA_X, T_invalid_opcode, 		0);
+	SETGATE(idt[ 7], 1, STA_X, T_device_na, 			0);
+	SETGATE(idt[ 8], 1, STA_X, T_double_fault, 			0);
+	SETGATE(idt[ 9], 1, STA_X, T_coproc_seg_overrun,	0);
+	SETGATE(idt[10], 1, STA_X, T_invalid_tss, 			0);
+	SETGATE(idt[11], 1, STA_X, T_seg_not_found, 		0);
+	SETGATE(idt[12], 1, STA_X, T_stack_fault, 			0);
+	SETGATE(idt[13], 1, STA_X, T_general_protect, 		0);
+	SETGATE(idt[14], 1, STA_X, T_page_fault, 			0);
+	SETGATE(idt[16], 1, STA_X, T_x87_float_error, 		0);
+	SETGATE(idt[17], 1, STA_X, T_align_check, 			0);
+	SETGATE(idt[18], 1, STA_X, T_machine_check, 		0);
+	SETGATE(idt[19], 1, STA_X, T_simd_exc, 				0);
+	
+	SETGATE(idt[15], 1, STA_X, T_unknown_trap, 			0);
 
 	// Per-CPU setup 
 	trap_init_percpu();
@@ -192,7 +212,6 @@ trap(struct Trapframe *tf)
 	assert(curenv && curenv->env_status == ENV_RUNNING);
 	env_run(curenv);
 }
-
 
 void
 page_fault_handler(struct Trapframe *tf)

@@ -8,6 +8,7 @@
 #include <kern/console.h>
 #include <kern/pmap.h>
 #include <kern/kclock.h>
+#include <kern/bin.h>
 #include <kern/env.h>
 #include <kern/trap.h>
 
@@ -37,7 +38,7 @@ i386_init(void)
 	trap_init();
 
 	// Create and run the user environment
-	env_create(&_binary_obj_user_hello_start, ENV_TYPE_USER);
+	env_create(&_binary_obj_user_faultread_start, ENV_TYPE_USER);
 	env_run(&envs[0]);
 
 	// Drop into the kernel monitor.

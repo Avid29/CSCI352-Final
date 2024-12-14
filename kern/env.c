@@ -7,6 +7,7 @@
 #include <inc/assert.h>
 #include <inc/elf.h>
 
+#include <kern/bin.h>
 #include <kern/env.h>
 #include <kern/pmap.h>
 #include <kern/trap.h>

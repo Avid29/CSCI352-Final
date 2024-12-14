@@ -5,8 +5,6 @@
 
 #include <inc/env.h>
 
-extern uint8_t _binary_obj_user_hello_start;
-
 extern struct Env *envs;		// All environments
 extern struct Env *curenv;		// Current environment
 extern struct Segdesc gdt[];

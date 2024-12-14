@@ -1,0 +1,9 @@
+{
+    "files.associations": {
+        "mmu.h": "c",
+        "pmap.h": "c",
+        "console.h": "c",
+        "trap.h": "c",
+        "x86.h": "c"
+    }
+}
