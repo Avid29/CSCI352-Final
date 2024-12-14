@@ -599,7 +599,10 @@ static uintptr_t user_mem_check_addr;
 int
 user_mem_check(struct Env *env, const void *va, size_t len, int perm)
 {
-	// +++ Activity 2: YOUR CODE HERE
+	for (const void *i = va; i < va+len; i += PGSIZE)
+		if ((perm & PTE_PERMS((*pgdir_walk(env->env_pgdir, i, 0)))) != perm)
+			return -E_FAULT;
+	
 	return 0;
 }
 

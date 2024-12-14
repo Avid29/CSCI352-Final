@@ -62,6 +62,8 @@ TRAPHANDLER(	T_HNDL_align, 	T_ALIGN)
 TRAPHANDLER(	T_HNDL_mchk, 	T_MCHK)
 TRAPHANDLER(	T_HNDL_simderr, T_SIMDERR)
 
+TRAPHANDLER_NOEC(T_HNDL_syscall, T_SYSCALL)
+
 _alltraps:
 	pushl	%ds
 	pushl	%es

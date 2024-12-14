@@ -64,24 +64,26 @@ trap_init(void)
 {
 	extern struct Segdesc gdt[];
 
-	SETGATE(idt[ 0], 1, STA_X, T_HNDL_divide,		0);
-	SETGATE(idt[ 1], 1, STA_X, T_HNDL_debug,		0);
-	SETGATE(idt[ 2], 1, STA_X, T_HNDL_nmi, 			0);
-	SETGATE(idt[ 3], 1, STA_X, T_HNDL_brkpt,		0);
-	SETGATE(idt[ 4], 1, STA_X, T_HNDL_oflow,		0);
-	SETGATE(idt[ 5], 1, STA_X, T_HNDL_bound,		0);
-	SETGATE(idt[ 6], 1, STA_X, T_HNDL_illop, 		0);
-	SETGATE(idt[ 7], 1, STA_X, T_HNDL_device, 		0);
-	SETGATE(idt[ 8], 1, STA_X, T_HNDL_dbl_flt, 		0);
-	SETGATE(idt[10], 1, STA_X, T_HNDL_tss, 			0);
-	SETGATE(idt[11], 1, STA_X, T_HNDL_segnp, 		0);
-	SETGATE(idt[12], 1, STA_X, T_HNDL_stack, 		0);
-	SETGATE(idt[13], 1, STA_X, T_HNDL_gpflt, 		0);
-	SETGATE(idt[14], 1, STA_X, T_HNDL_pgflt, 		0);
-	SETGATE(idt[16], 1, STA_X, T_HNDL_fperr, 		0);
-	SETGATE(idt[17], 1, STA_X, T_HNDL_align, 		0);
-	SETGATE(idt[18], 1, STA_X, T_HNDL_mchk, 		0);
-	SETGATE(idt[19], 1, STA_X, T_HNDL_simderr, 		0);
+	SETGATE(idt[T_DIVIDE], 1, STA_X, T_HNDL_divide,	0);
+	SETGATE(idt[T_DEBUG], 1, STA_X, T_HNDL_debug, 0);
+	SETGATE(idt[T_NMI], 1, STA_X, T_HNDL_nmi, 0);
+	SETGATE(idt[T_BRKPT], 1, STA_X, T_HNDL_brkpt, 0);
+	SETGATE(idt[T_OFLOW], 1, STA_X, T_HNDL_oflow, 0);
+	SETGATE(idt[T_BOUND], 1, STA_X, T_HNDL_bound, 0);
+	SETGATE(idt[T_ILLOP], 1, STA_X, T_HNDL_illop, 0);
+	SETGATE(idt[T_DEVICE], 1, STA_X, T_HNDL_device, 0);
+	SETGATE(idt[T_DBLFLT], 1, STA_X, T_HNDL_dbl_flt, 0);
+	SETGATE(idt[T_TSS], 1, STA_X, T_HNDL_tss, 0);
+	SETGATE(idt[T_SEGNP], 1, STA_X, T_HNDL_segnp, 0);
+	SETGATE(idt[T_STACK], 1, STA_X, T_HNDL_stack, 0);
+	SETGATE(idt[T_GPFLT], 1, STA_X, T_HNDL_gpflt, 0);
+	SETGATE(idt[T_PGFLT], 1, STA_X, T_HNDL_pgflt, 0);
+	SETGATE(idt[T_FPERR], 1, STA_X, T_HNDL_fperr, 0);
+	SETGATE(idt[T_ALIGN], 1, STA_X, T_HNDL_align, 0);
+	SETGATE(idt[T_MCHK], 1, STA_X, T_HNDL_mchk, 0);
+	SETGATE(idt[T_SIMDERR], 1, STA_X, T_HNDL_simderr, 0);
+
+	SETGATE(idt[T_SYSCALL], 0, GD_KT, T_HNDL_syscall, 0);
 
 	// Per-CPU setup 
 	trap_init_percpu();

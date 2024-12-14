@@ -33,6 +33,8 @@ void T_HNDL_align();
 void T_HNDL_mchk();
 void T_HNDL_simderr();
 
+void T_HNDL_syscall();
+
 void trap_init(void);
 void trap_init_percpu(void);
 void print_regs(struct PushRegs *regs);

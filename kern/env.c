@@ -162,12 +162,6 @@ env_init_percpu(void)
 static int
 env_setup_vm(struct Env *e)
 {
-	// Initialize a new page directory.
-	// It's up to user_init_pgdir() how deep or shallow the clone needs to be.
-	if (!(e->env_pgdir = user_init_pgdir()))
-		return -E_NO_MEM;
-
-    
 	// Hint:
 	//    - The VA space of all envs is identical above UTOP
 	//	(except at UVPT, which we've set below).
@@ -182,8 +176,10 @@ env_setup_vm(struct Env *e)
 	//	pp_ref for env_free to work correctly.
 	//    - The functions in kern/pmap.h are handy.
 
-
-	// LAB 3: Your code here.
+	// Initialize a new page directory.
+	// It's up to user_init_pgdir() how deep or shallow the clone needs to be.
+	if (!(e->env_pgdir = user_init_pgdir()))
+		return -E_NO_MEM;
 
 	// UVPT maps the env's own page table read-only.
 	// Permissions: kernel R, user R

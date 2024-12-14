@@ -11,7 +11,7 @@ const char *binaryname = "<unknown>";
 void
 libmain(int argc, char **argv)
 {
-	thisenv = envs;
+	thisenv = envs+sys_getenvid();
 
 	// save the name of the program so that panic() can use it
 	if (argc > 0)
