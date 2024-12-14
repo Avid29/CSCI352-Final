@@ -200,6 +200,9 @@ mem_init(void)
 	//    - the new image at UENVS  -- kernel R, user R
 	//    - envs itself -- kernel RW, user NONE
 
+	// Note: This assumes that ENVSINFO_SIZE is small enough not to run into
+	// the UPAGES space. Don't play with the NENVs value if brain small
+	// or no thinky thinky.
 	boot_map_region(kern_pgdir, UENVS, ENVSINFO_SIZE, PADDR(envs), PTE_U);
 
 	//////////////////////////////////////////////////////////////////////
@@ -553,11 +556,13 @@ tlb_invalidate(pde_t *pgdir, void *va)
 // creating new tables when possible.
 // 
 // Currently, an assumption is made that only the directory entries need
-// to be duplicated.
+// to be duplicated. Checking this would need math, but I assume it's not
+// neccessary, partially because if it were more allocations would be needed.
+// This is  possible to do of course, but annoying.🤞
 // 
 int
-clone_range(pde_t* pgdir, uintptr_t start, size_t size){
-	for (size_t i = 0; i < size; i += size/(PGSIZE*PGSIZE)){
+clone_range(pde_t *pgdir, uintptr_t start, size_t size){
+	for (size_t i = 0; i < size; i += MAX(size/(PGSIZE*PGSIZE), 1)){
 		pgdir[PDX(start + i)] = kern_pgdir[PDX(start + i)];
 	}
 	return 0;
@@ -583,14 +588,15 @@ user_init_pgdir(void) {
 	pde_t *pgdir = page2kva(p);
 
 	// Clone ranges of memory
-	if (!clone_range(pgdir, UPAGES, PAGEINFO_SIZE))
-		goto free_and_fail;
-	if (!clone_range(pgdir, UENVS, ENVSINFO_SIZE))
-		goto free_and_fail;
+	if (clone_range(pgdir, UPAGES, PAGEINFO_SIZE) ||
+		clone_range(pgdir, UENVS, ENVSINFO_SIZE)) {
+		// A range failed to clone
+		// Free the page and return null.
+		page_free(p);
+		return NULL;
+	}
 
-	free_and_fail:
-	page_free(p);
-	return NULL;
+	return page2kva(p);
 }
 
 static uintptr_t user_mem_check_addr;

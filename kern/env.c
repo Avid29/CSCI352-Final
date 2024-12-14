@@ -166,7 +166,7 @@ env_setup_vm(struct Env *e)
 	if (!(e->env_pgdir = user_init_pgdir()))
 		return -E_NO_MEM;
 
-
+    
 	// Hint:
 	//    - The VA space of all envs is identical above UTOP
 	//	(except at UVPT, which we've set below).
@@ -264,13 +264,20 @@ env_alloc(struct Env **newenv_store, envid_t parent_id)
 static void
 region_alloc(struct Env *e, void *va, size_t len)
 {
-	// LAB 3: Your code here.
-	// (But only if you need it for load_icode.)
-	//
+    uintptr_t start = PGROUNDDOWN((uintptr_t) va);
+    uintptr_t end = PGROUNDUP(start + len);
+
 	// Hint: It is easier to use region_alloc if the caller can pass
 	//   'va' and 'len' values that are not page-aligned.
 	//   You should round va down, and round (va + len) up.
 	//   (Watch out for corner-cases!)
+
+	struct PageInfo* pp;
+    for (uintptr_t addr = start; addr < end ; addr += PGSIZE)
+		// Allocate and insert page 
+        if (!(pp = page_alloc(0)) ||
+			!page_insert(e->env_pgdir, pp, (void *)addr, PTE_U | PTE_W))
+            panic("No memory available to map");
 }
 
 //
@@ -326,12 +333,43 @@ load_icode(struct Env *e, uint8_t *binary)
 	//  to make sure that the environment starts executing there.
 	//  What?  (See env_run() and env_pop_tf() below.)
 
-	// LAB 3: Your code here.
+	struct Elf *header = (struct Elf *)binary;
+    if (header->e_magic != ELF_MAGIC)
+        panic("This is not an ELF Binary");
+	
+    // fetch the program headers
+	struct Proghdr *ph = (struct Proghdr *)(header + header->e_phoff);
+    struct Proghdr *ph_end = ph + header->e_phnum;
+
+    for (; ph < ph_end; ph++) {
+        if (ph->p_type != ELF_PROG_LOAD) {
+            continue;
+        }
+
+        if (ph->p_filesz > ph->p_memsz) {
+            panic("ELF segment file size is greater than memory size");
+        }
+		
+        // Allocate virtual memory
+        void* va_start = (void *)PGROUNDDOWN(ph->p_va);
+        size_t va_size = PGROUNDUP(ph->p_memsz);
+		region_alloc(e, va_start, va_size);
+        
+        // Copy segment data to the virtual memory
+		memcpy(va_start, (void *)(binary + ph->p_offset), va_size);
+    }
+
+	// Set the instruction pointer to the entry location
+	e->env_tf.tf_eip = header->e_entry;
 
 	// Now map one page for the program's initial stack
 	// at virtual address USTACKTOP - PGSIZE.
 
-	// LAB 3: Your code here.
+	// Note: Is one page a big enough stack to run doom?
+	// He said, foreshadowing too much work to think about rn.
+    struct PageInfo *sp = page_alloc(ALLOC_ZERO);
+	if (!sp || !page_insert(e->env_pgdir, sp, (void *)(USTACKTOP-PGSIZE), PTE_U|PTE_W))
+		panic("No memory left for program stack");
 }
 
 //
@@ -354,6 +392,10 @@ env_create(uint8_t *binary, enum EnvType type)
 			panic("Out of memory while creating first user-mode environment.");
 			break;
 	}
+
+    load_icode(e, binary);
+
+    e->env_status = ENV_RUNNABLE;
 }
 
 //
@@ -469,8 +511,18 @@ env_run(struct Env *e)
 	//	and make sure you have set the relevant parts of
 	//	e->env_tf to sensible values.
 
-	// LAB 3: Your code here.
+	// Clear previous environment's status  
+	if (curenv && curenv->env_status == ENV_RUNNING)
+		curenv->env_status = ENV_RUNNABLE;
 
-	panic("env_run not yet implemented");
+	// Swap in the current environment, set status, and adjust run counter
+	curenv = e;
+	curenv->env_status = ENV_RUNNING;
+	curenv->env_runs++;
+	
+	// Load environment page directory and swap registers to
+	// the user environment.
+	lcr3(PADDR(e->env_pgdir));
+	env_pop_tf(&e->env_tf);
 }
 

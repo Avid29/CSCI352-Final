@@ -33,6 +33,13 @@ i386_init(void)
 	// environment initialization functions
 	env_init();
 
+	// trap initialization functions
+	trap_init();
+
+	// Create and run the user environment
+	env_create(_binary_obj_user_hello_start, ENV_TYPE_USER);
+	// env_run();
+
 	// Drop into the kernel monitor.
 	while (1)
 		monitor(NULL);

@@ -1,0 +1,8 @@
+{
+    "files.associations": {
+        "assert.h": "c",
+        "env.h": "c",
+        "pmap.h": "c",
+        "memlayout.h": "c"
+    }
+}
