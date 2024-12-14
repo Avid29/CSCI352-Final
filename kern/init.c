@@ -37,8 +37,8 @@ i386_init(void)
 	trap_init();
 
 	// Create and run the user environment
-	env_create(_binary_obj_user_hello_start, ENV_TYPE_USER);
-	// env_run();
+	env_create(&_binary_obj_user_hello_start, ENV_TYPE_USER);
+	env_run(&envs[0]);
 
 	// Drop into the kernel monitor.
 	while (1)

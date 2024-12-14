@@ -276,7 +276,7 @@ region_alloc(struct Env *e, void *va, size_t len)
     for (uintptr_t addr = start; addr < end ; addr += PGSIZE)
 		// Allocate and insert page 
         if (!(pp = page_alloc(0)) ||
-			!page_insert(e->env_pgdir, pp, (void *)addr, PTE_U | PTE_W))
+			page_insert(e->env_pgdir, pp, (void *)addr, PTE_U | PTE_W))
             panic("No memory available to map");
 }
 
@@ -333,30 +333,37 @@ load_icode(struct Env *e, uint8_t *binary)
 	//  to make sure that the environment starts executing there.
 	//  What?  (See env_run() and env_pop_tf() below.)
 
+	uint32_t start = (uint32_t)binary;
 	struct Elf *header = (struct Elf *)binary;
     if (header->e_magic != ELF_MAGIC)
         panic("This is not an ELF Binary");
 	
-    // fetch the program headers
-	struct Proghdr *ph = (struct Proghdr *)(header + header->e_phoff);
-    struct Proghdr *ph_end = ph + header->e_phnum;
-
-    for (; ph < ph_end; ph++) {
-        if (ph->p_type != ELF_PROG_LOAD) {
-            continue;
-        }
-
-        if (ph->p_filesz > ph->p_memsz) {
-            panic("ELF segment file size is greater than memory size");
-        }
+    // Iterate program headers
+	struct Proghdr *ph = (struct Proghdr *)(start + header->e_phoff);
+    for (uint16_t i = 0; i < header->e_phnum; i++) {
 		
+		// Skip non-loading program section
+        if (ph->p_type != ELF_PROG_LOAD)
+            continue;
+
+		// Grab program addressing and sizing info
+        void* va_start = (void *)ph->p_va;
+        size_t va_size = ph->p_memsz;
+		uint32_t f_offset = start + ph->p_offset;
+        if (ph->p_filesz > ph->p_memsz)
+            panic("ELF segment file size is greater than memory size");
+
         // Allocate virtual memory
-        void* va_start = (void *)PGROUNDDOWN(ph->p_va);
-        size_t va_size = PGROUNDUP(ph->p_memsz);
+		// Region alloc handled alignment
 		region_alloc(e, va_start, va_size);
         
         // Copy segment data to the virtual memory
-		memcpy(va_start, (void *)(binary + ph->p_offset), va_size);
+		// Swap to environment's page directory during the swap
+		lcr3(PADDR(e->env_pgdir));
+		memcpy(va_start, (void *)f_offset, va_size);
+		lcr3(PADDR(kern_pgdir));
+		
+		ph += header->e_phentsize;
     }
 
 	// Set the instruction pointer to the entry location
@@ -368,7 +375,7 @@ load_icode(struct Env *e, uint8_t *binary)
 	// Note: Is one page a big enough stack to run doom?
 	// He said, foreshadowing too much work to think about rn.
     struct PageInfo *sp = page_alloc(ALLOC_ZERO);
-	if (!sp || !page_insert(e->env_pgdir, sp, (void *)(USTACKTOP-PGSIZE), PTE_U|PTE_W))
+	if (!sp || page_insert(e->env_pgdir, sp, (void *)(USTACKTOP-PGSIZE), PTE_U|PTE_W))
 		panic("No memory left for program stack");
 }
 

@@ -5,7 +5,7 @@
 
 #include <inc/env.h>
 
-extern uint8_t *_binary_obj_user_hello_start, _binary_obj_user_hello_end, _binary_obj_user_hello_size;
+extern uint8_t _binary_obj_user_hello_start;
 
 extern struct Env *envs;		// All environments
 extern struct Env *curenv;		// Current environment

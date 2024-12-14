@@ -551,23 +551,6 @@ tlb_invalidate(pde_t *pgdir, void *va)
 	invlpg(va);
 }
 
-// 
-// Clones a range of directory and table entries from kern_pgdir, avoiding
-// creating new tables when possible.
-// 
-// Currently, an assumption is made that only the directory entries need
-// to be duplicated. Checking this would need math, but I assume it's not
-// neccessary, partially because if it were more allocations would be needed.
-// This is  possible to do of course, but annoying.🤞
-// 
-int
-clone_range(pde_t *pgdir, uintptr_t start, size_t size){
-	for (size_t i = 0; i < size; i += MAX(size/(PGSIZE*PGSIZE), 1)){
-		pgdir[PDX(start + i)] = kern_pgdir[PDX(start + i)];
-	}
-	return 0;
-}
-
 //
 // Duplicates the kern_pgdir for a user environment,
 // taking only the directory and table entries with user
@@ -585,16 +568,10 @@ user_init_pgdir(void) {
 	if (!(p = page_alloc(ALLOC_ZERO)))
 		return NULL;
 	p->pp_ref++;
-	pde_t *pgdir = page2kva(p);
 
-	// Clone ranges of memory
-	if (clone_range(pgdir, UPAGES, PAGEINFO_SIZE) ||
-		clone_range(pgdir, UENVS, ENVSINFO_SIZE)) {
-		// A range failed to clone
-		// Free the page and return null.
-		page_free(p);
-		return NULL;
-	}
+	// Copy directory base
+	pde_t *pgdir = page2kva(p);
+	memcpy(pgdir, kern_pgdir, PGSIZE);
 
 	return page2kva(p);
 }
