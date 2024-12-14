@@ -276,7 +276,7 @@ region_alloc(struct Env *e, void *va, size_t len)
     for (uintptr_t addr = start; addr < end ; addr += PGSIZE)
 		// Allocate and insert page 
         if (!(pp = page_alloc(0)) ||
-			page_insert(e->env_pgdir, pp, (void *)addr, PTE_U | PTE_W))
+			page_insert(e->env_pgdir, pp, (void *)addr, PTE_U|PTE_W))
             panic("No memory available to map");
 }
 

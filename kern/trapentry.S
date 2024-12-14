@@ -43,13 +43,12 @@
 
 .text
 
-/*
- * Lab 3: Your code here for generating entry points for the different traps.
- */
+TRAPHANDLER(sys_cputs, 0);
 
-
-
-/*
- * Lab 3: Your code here for _alltraps
- */
-
+_alltraps:
+	/* Push registers to trapframe */
+	pushal
+	movw	GD_KD, %ds
+	movw	GD_KD, %es
+	pushl	%esp
+	call trap
