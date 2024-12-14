@@ -339,9 +339,12 @@ load_icode(struct Env *e, uint8_t *binary)
         panic("This is not an ELF Binary");
 	
     // Iterate program headers
-	struct Proghdr *ph = (struct Proghdr *)(start + header->e_phoff);
+	uint32_t phs_start = start + header->e_phoff;
     for (uint16_t i = 0; i < header->e_phnum; i++) {
-		
+
+		// Get iteration's program header
+		struct Proghdr *ph = (struct Proghdr *)(phs_start + (i * header->e_phentsize));
+
 		// Skip non-loading program section
         if (ph->p_type != ELF_PROG_LOAD)
             continue;
@@ -362,8 +365,6 @@ load_icode(struct Env *e, uint8_t *binary)
 		lcr3(PADDR(e->env_pgdir));
 		memcpy(va_start, (void *)f_offset, va_size);
 		lcr3(PADDR(kern_pgdir));
-		
-		ph += header->e_phentsize;
     }
 
 	// Set the instruction pointer to the entry location
