@@ -14,27 +14,24 @@ extern struct Gatedesc idt[];
 extern struct Pseudodesc idt_pd;
 
 // Trap handlers (see trapentry.S)
-void T_div_err();
-void T_debug();
-void T_nmskint();
-void T_brkpnt();
-void T_overflow();
-void T_bound_range_exc();
-void T_invalid_opcode();
-void T_device_na();
-void T_double_fault();
-void T_coproc_seg_overrun();
-void T_invalid_tss();
-void T_seg_not_found();
-void T_stack_fault();
-void T_general_protect();
-void T_page_fault();
-void T_x87_float_error();
-void T_align_check();
-void T_machine_check();
-void T_simd_exc();
-
-void T_unknown_trap();
+void T_HNDL_divide();
+void T_HNDL_debug();
+void T_HNDL_nmi();
+void T_HNDL_brkpt();
+void T_HNDL_oflow();
+void T_HNDL_bound();
+void T_HNDL_illop();
+void T_HNDL_device();
+void T_HNDL_dbl_flt();
+void T_HNDL_tss();
+void T_HNDL_segnp();
+void T_HNDL_stack();
+void T_HNDL_gpflt();
+void T_HNDL_pgflt();
+void T_HNDL_fperr();
+void T_HNDL_align();
+void T_HNDL_mchk();
+void T_HNDL_simderr();
 
 void trap_init(void);
 void trap_init_percpu(void);

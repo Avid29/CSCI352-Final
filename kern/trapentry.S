@@ -43,31 +43,30 @@
 
 .text
 
-TRAPHANDLER(	T_div_err, 				 0)
-TRAPHANDLER(	T_debug, 				 1)
-TRAPHANDLER(	T_nmskint, 				 2)
-TRAPHANDLER(	T_brkpnt, 				 3)
-TRAPHANDLER(	T_overflow, 			 4)
-TRAPHANDLER(	T_bound_range_exc, 		 5)
-TRAPHANDLER(	T_invalid_opcode, 		 6)
-TRAPHANDLER(	T_device_na, 			 7)
-TRAPHANDLER(	T_double_fault, 		 8)
-TRAPHANDLER(	T_coproc_seg_overrun,	 9)
-TRAPHANDLER(	T_invalid_tss, 			10)
-TRAPHANDLER(	T_seg_not_found, 		11)
-TRAPHANDLER(	T_stack_fault, 			12)
-TRAPHANDLER(	T_general_protect, 		13)
-
-TRAPHANDLER(	T_page_fault, 			14)
-TRAPHANDLER(	T_x87_float_error, 		16)
-TRAPHANDLER(	T_align_check, 			17)
-TRAPHANDLER(	T_machine_check, 		18)
-TRAPHANDLER(	T_simd_exc, 			19)
-
-TRAPHANDLER(	T_unknown_trap, 		15)
+TRAPHANDLER(	T_HNDL_divide, 	T_DIVIDE)
+TRAPHANDLER(	T_HNDL_debug, 	T_DEBUG)
+TRAPHANDLER(	T_HNDL_nmi, 	T_NMI)
+TRAPHANDLER(	T_HNDL_brkpt, 	T_BRKPT)
+TRAPHANDLER(	T_HNDL_oflow, 	T_OFLOW)
+TRAPHANDLER(	T_HNDL_bound, 	T_BOUND)
+TRAPHANDLER(	T_HNDL_illop, 	T_ILLOP)
+TRAPHANDLER(	T_HNDL_device, 	T_DEVICE)
+TRAPHANDLER(	T_HNDL_dbl_flt, T_DBLFLT)
+TRAPHANDLER(	T_HNDL_tss, 	T_TSS)
+TRAPHANDLER(	T_HNDL_segnp, 	T_SEGNP)
+TRAPHANDLER(	T_HNDL_stack, 	T_STACK)
+TRAPHANDLER(	T_HNDL_gpflt, 	T_GPFLT)
+TRAPHANDLER(	T_HNDL_pgflt, 	T_PGFLT)
+TRAPHANDLER(	T_HNDL_fperr, 	T_FPERR)
+TRAPHANDLER(	T_HNDL_align, 	T_ALIGN)
+TRAPHANDLER(	T_HNDL_mchk, 	T_MCHK)
+TRAPHANDLER(	T_HNDL_simderr, T_SIMDERR)
 
 _alltraps:
+	pushl	%ds
+	pushl	%es
 	pushal
+
 	movw	$GD_KD, %ax
 	movw	%ax, %ds
 	movw	%ax, %es
