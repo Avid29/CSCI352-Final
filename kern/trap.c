@@ -64,26 +64,25 @@ trap_init(void)
 {
 	extern struct Segdesc gdt[];
 
-	SETGATE(idt[T_DIVIDE], 1, STA_X, T_HNDL_divide,	0);
-	SETGATE(idt[T_DEBUG], 1, STA_X, T_HNDL_debug, 0);
-	SETGATE(idt[T_NMI], 1, STA_X, T_HNDL_nmi, 0);
-	SETGATE(idt[T_BRKPT], 1, STA_X, T_HNDL_brkpt, 0);
-	SETGATE(idt[T_OFLOW], 1, STA_X, T_HNDL_oflow, 0);
-	SETGATE(idt[T_BOUND], 1, STA_X, T_HNDL_bound, 0);
-	SETGATE(idt[T_ILLOP], 1, STA_X, T_HNDL_illop, 0);
-	SETGATE(idt[T_DEVICE], 1, STA_X, T_HNDL_device, 0);
-	SETGATE(idt[T_DBLFLT], 1, STA_X, T_HNDL_dbl_flt, 0);
-	SETGATE(idt[T_TSS], 1, STA_X, T_HNDL_tss, 0);
-	SETGATE(idt[T_SEGNP], 1, STA_X, T_HNDL_segnp, 0);
-	SETGATE(idt[T_STACK], 1, STA_X, T_HNDL_stack, 0);
-	SETGATE(idt[T_GPFLT], 1, STA_X, T_HNDL_gpflt, 0);
-	SETGATE(idt[T_PGFLT], 1, STA_X, T_HNDL_pgflt, 0);
-	SETGATE(idt[T_FPERR], 1, STA_X, T_HNDL_fperr, 0);
-	SETGATE(idt[T_ALIGN], 1, STA_X, T_HNDL_align, 0);
-	SETGATE(idt[T_MCHK], 1, STA_X, T_HNDL_mchk, 0);
-	SETGATE(idt[T_SIMDERR], 1, STA_X, T_HNDL_simderr, 0);
-
-	SETGATE(idt[T_SYSCALL], 0, STA_X, T_HNDL_syscall, 3);
+	SETGATE(idt[T_DIVIDE],	1, STA_X, T_HNDL_divide,	3);
+	SETGATE(idt[T_DEBUG],	1, STA_X, T_HNDL_debug, 	3);
+	SETGATE(idt[T_NMI],		1, STA_X, T_HNDL_nmi, 		3);
+	SETGATE(idt[T_BRKPT], 	1, STA_X, T_HNDL_brkpt, 	3);
+	SETGATE(idt[T_OFLOW], 	1, STA_X, T_HNDL_oflow, 	3);
+	SETGATE(idt[T_BOUND], 	1, STA_X, T_HNDL_bound, 	3);
+	SETGATE(idt[T_ILLOP], 	1, STA_X, T_HNDL_illop, 	3);
+	SETGATE(idt[T_DEVICE], 	1, STA_X, T_HNDL_device, 	3);
+	SETGATE(idt[T_DBLFLT], 	1, STA_X, T_HNDL_dbl_flt, 	3);
+	SETGATE(idt[T_TSS], 	1, STA_X, T_HNDL_tss, 		3);
+	SETGATE(idt[T_SEGNP], 	1, STA_X, T_HNDL_segnp, 	3);
+	SETGATE(idt[T_STACK], 	1, STA_X, T_HNDL_stack, 	3);
+	SETGATE(idt[T_GPFLT], 	1, STA_X, T_HNDL_gpflt, 	3);
+	SETGATE(idt[T_PGFLT], 	1, STA_X, T_HNDL_pgflt, 	3);
+	SETGATE(idt[T_FPERR], 	1, STA_X, T_HNDL_fperr, 	3);
+	SETGATE(idt[T_ALIGN], 	1, STA_X, T_HNDL_align, 	3);
+	SETGATE(idt[T_MCHK], 	1, STA_X, T_HNDL_mchk, 		3);
+	SETGATE(idt[T_SIMDERR], 1, STA_X, T_HNDL_simderr, 	3);
+	SETGATE(idt[T_SYSCALL], 0, STA_X, T_HNDL_syscall, 	3);
 
 	// Per-CPU setup 
 	trap_init_percpu();
