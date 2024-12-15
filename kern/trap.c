@@ -83,7 +83,7 @@ trap_init(void)
 	SETGATE(idt[T_MCHK], 1, STA_X, T_HNDL_mchk, 0);
 	SETGATE(idt[T_SIMDERR], 1, STA_X, T_HNDL_simderr, 0);
 
-	SETGATE(idt[T_SYSCALL], 0, GD_KT, T_HNDL_syscall, 0);
+	SETGATE(idt[T_SYSCALL], 0, STA_X, T_HNDL_syscall, 3);
 
 	// Per-CPU setup 
 	trap_init_percpu();
@@ -181,11 +181,11 @@ trap_dispatch(struct Trapframe *tf)
 	{
 		case T_PGFLT:
 			page_fault_handler(tf);
-			break;
+			return;
 		
 		case T_BRKPT:
 			monitor(tf);
-			break;
+			return;
 
 		case T_SYSCALL:
 			// place the result of the syscall back into the EAX register
@@ -198,9 +198,7 @@ trap_dispatch(struct Trapframe *tf)
 				tf->tf_regs.reg_esi
 			);
 
-			break;
-		default:
-			break;
+			return;
 	}
 
 	// Unexpected trap: The user process or the kernel has a bug.
@@ -260,8 +258,9 @@ page_fault_handler(struct Trapframe *tf)
 	fault_va = rcr2();
 
 	// Handle kernel-mode page faults.
-
-	// LAB 3: Your code here.
+	if (!(tf->tf_cs & 3)){
+		panic("Kernel page fault");
+	}
 
 	// We've already handled kernel-mode exceptions, so if we get here,
 	// the page fault happened in user mode.
@@ -272,4 +271,3 @@ page_fault_handler(struct Trapframe *tf)
 	print_trapframe(tf);
 	env_destroy(curenv);
 }
-

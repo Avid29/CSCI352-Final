@@ -73,4 +73,5 @@ _alltraps:
 	movw	%ax, %ds
 	movw	%ax, %es
 	pushl	%esp
-	call trap
+	pushl	$0
+	jmp 	trap
