@@ -4,18 +4,19 @@
 
 #include <inc/types.h>
 
-extern uint8_t _binary_obj_user_hello_start;
-extern uint8_t _binary_obj_user_buggyhello_start;
-extern uint8_t _binary_obj_user_buggyhello2_start;
-extern uint8_t _binary_obj_user_evilhello_start;
-extern uint8_t _binary_obj_user_testbss_start;
-extern uint8_t _binary_obj_user_divzero_start;
-extern uint8_t _binary_obj_user_breakpoint_start;
-extern uint8_t _binary_obj_user_softint_start;
-extern uint8_t _binary_obj_user_badsegment_start;
-extern uint8_t _binary_obj_user_faultread_start;
-extern uint8_t _binary_obj_user_faultreadkernel_start;
-extern uint8_t _binary_obj_user_faultwrite_start;
-extern uint8_t _binary_obj_user_faultwritekernel_start;
+// Just forward declaring this so it shows up in VS Code
+extern uint8_t user_hello;
+extern uint8_t user_buggyhello;
+extern uint8_t user_buggyhello2;
+extern uint8_t user_evilhello;
+extern uint8_t user_testbss;
+extern uint8_t user_divzero;
+extern uint8_t user_breakpoint;
+extern uint8_t user_softint;
+extern uint8_t user_badsegment;
+extern uint8_t user_faultread;
+extern uint8_t user_faultreadkernel;
+extern uint8_t user_faultwrite;
+extern uint8_t user_faultwritekernel;
 
 #endif // !JOS_KERN_ENV_H
