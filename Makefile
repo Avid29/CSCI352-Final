@@ -19,7 +19,20 @@ endif
 
 TOP = .
 
-GDBPORT	:= 5000
+# This will differenciate between running locally or on the CS machine. Default to the CS machine
+MODE ?= cs
+
+ifeq ($(MODE),cs)
+	GDBPORT := $(shell expr `id -u` % 5000 + 25000)
+	CFLAGS += -gstabs
+	QEMU = /home/course/csci352/bin/qemu-system-i386
+else ifeq ($(MODE),local)
+	GDBPORT := 5000
+	CFLAGS += -g -march=i686
+	QEMU = qemu-system-i386
+else
+	$(error Unknown MODE '$(MODE)', valid options are 'local' or 'cs')
+endif
 
 CC	:= $(GCCPREFIX)gcc -pipe
 GDB	:= $(GCCPREFIX)gdb
@@ -29,8 +42,6 @@ LD	:= $(GCCPREFIX)ld
 OBJCOPY	:= $(GCCPREFIX)objcopy
 OBJDUMP	:= $(GCCPREFIX)objdump
 NM	:= $(GCCPREFIX)nm
-
-QEMU = qemu-system-i386
 
 # Native commands
 NCC	:= gcc $(CC_VER) -pipe
@@ -45,7 +56,7 @@ CFLAGS := $(CFLAGS) $(DEFS) $(LABDEFS) -O1 -fno-builtin -I$(TOP) -MD
 CFLAGS += -fno-omit-frame-pointer
 CFLAGS += -std=gnu99
 CFLAGS += -static
-CFLAGS += -Wall -Wno-format -Wno-unused -Werror -g -m32 -march=i686
+CFLAGS += -Wall -Wno-format -Wno-unused -Werror -m32 -march=i686
 # -fno-tree-ch prevented gcc from sometimes reordering read_ebp() before
 # mon_backtrace()'s function prologue on gcc version: (Debian 4.7.2-5) 4.7.2
 CFLAGS += -fno-tree-ch
@@ -81,8 +92,8 @@ all:
 	   $(OBJDIR)/lib/%.o $(OBJDIR)/fs/%.o $(OBJDIR)/net/%.o \
 	   $(OBJDIR)/user/%.o
 
-KERN_CFLAGS := $(CFLAGS) -DJOS_KERNEL -g
-USER_CFLAGS := $(CFLAGS) -DJOS_USER -g
+KERN_CFLAGS := $(CFLAGS) -DJOS_KERNEL
+USER_CFLAGS := $(CFLAGS) -DJOS_USER
 
 # Update .vars.X if variable X has changed since the last make run.
 #
