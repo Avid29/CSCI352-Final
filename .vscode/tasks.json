@@ -5,7 +5,7 @@
             "label": "Boot QEMU",
             "type": "shell",
             "command": "make",
-            "args": ["qemu-gdb"],
+            "args": ["MODE=local", "qemu-gdb"],
             "isBackground": true,
             "problemMatcher": {
                 "pattern":{

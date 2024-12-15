@@ -143,6 +143,29 @@ debuginfo_eip(uintptr_t addr, struct Eipdebuginfo *info)
 
 		// +++ Activity 2: YOUR CODE HERE
 
+		// Validate user access to USD
+		if (user_mem_check(curenv, usd, sizeof(*usd), PTE_U | PTE_P) < 0) {
+			return -1;
+		}
+
+		// Fetch the stab data from the USD
+		stabs = usd->stabs;
+		stab_end = usd->stab_end;
+		stabstr = usd->stabstr;
+		stabstr_end = usd->stabstr_end;
+
+		// Validate user access to stabs
+		size_t stabs_size = (stab_end - stabs) * sizeof(struct Stab);
+		if (user_mem_check(curenv, stabs, stabs_size, PTE_U | PTE_P) < 0) {
+			return -1;
+		}
+
+		// Validate user access to stabstr
+		size_t stabstr_size = (stabstr_end - stabstr);
+		if (user_mem_check(curenv, stabstr, stabstr_size, PTE_U | PTE_P) < 0) {
+			return -1;
+		}
+
 		stabs = usd->stabs;
 		stab_end = usd->stab_end;
 		stabstr = usd->stabstr;

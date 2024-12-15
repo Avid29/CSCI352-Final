@@ -21,7 +21,7 @@ sys_cputs(const char *s, size_t len)
 	// Destroy the environment if not.
 
 	if (user_mem_check(curenv, s, len, PTE_U) < 0) {
-		cprintf("[%08x] User attempted to access [%08x] but its not user readable", curenv->env_id, (uintptr_t)s);
+		cprintf("[%08x] user_mem_check assertion failure for va [%08x]\n", curenv->env_id, (uintptr_t)s);
 		env_destroy(curenv);
 	}
 
