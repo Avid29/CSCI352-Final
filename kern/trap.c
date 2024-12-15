@@ -77,7 +77,7 @@ trap_init(void)
 	SETGATE(idt[T_SEGNP], 	1, STA_X, T_HNDL_segnp, 	3);
 	SETGATE(idt[T_STACK], 	1, STA_X, T_HNDL_stack, 	3);
 	SETGATE(idt[T_GPFLT], 	1, STA_X, T_HNDL_gpflt, 	3);
-	SETGATE(idt[T_PGFLT], 	1, STA_X, T_HNDL_pgflt, 	3);
+	SETGATE(idt[T_PGFLT], 	1, STA_X, T_HNDL_pgflt, 	0); // Only the kernel may throw a page fault trap
 	SETGATE(idt[T_FPERR], 	1, STA_X, T_HNDL_fperr, 	3);
 	SETGATE(idt[T_ALIGN], 	1, STA_X, T_HNDL_align, 	3);
 	SETGATE(idt[T_MCHK], 	1, STA_X, T_HNDL_mchk, 		3);
@@ -161,21 +161,6 @@ static void
 trap_dispatch(struct Trapframe *tf)
 {
 	// Handle processor exceptions.
-
-/* 
-	// Map handlers and call handler func
-	// For brownie points
-	uint32_t trapno = tf->tf_trapno; 
-	const size_t max_handler = 48;
-	void (*handler[max_handler])(struct Trapframe *) = {
-		[T_PGFLT] = page_fault_handler,
-		[T_BRKPT] = monitor,
-	};
-
-	if (trapno < max_handler)
-		(*handler[trapno])(tf);
-*/
-
 	switch (tf->tf_trapno)
 	{
 		case T_PGFLT:
@@ -196,7 +181,6 @@ trap_dispatch(struct Trapframe *tf)
 				tf->tf_regs.reg_edi,
 				tf->tf_regs.reg_esi
 			);
-
 			return;
 	}
 
